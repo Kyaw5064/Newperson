@@ -33,6 +33,13 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Align Expo SDK 52 package versions
+        run: |
+          npx expo install --fix
+          npm ls expo expo-font expo-modules-core @expo/vector-icons || true
+        env:
+          CI: 1
+
       - name: Run tests
         run: node tests/run-tests.mjs
 
