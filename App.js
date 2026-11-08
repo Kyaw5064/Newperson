@@ -30,11 +30,21 @@ const STATUS_ICON = {
   lead: 'call-outline', interview: 'chatbubbles-outline', docs: 'document-text-outline',
   started: 'checkmark-done-outline', left: 'exit-outline', rejected: 'close-circle-outline',
 };
+/* Attendance (ရုံးတက်) — built-in types; admin can switch them off or add custom ones. */
+const ATT_BUILTIN = [
+  { id: 'work', color: C.green, icon: 'checkmark-circle' },
+  { id: 'off', color: C.sky, icon: 'cafe' },
+  { id: 'absent', color: C.red, icon: 'close-circle' },
+  { id: 'leave', color: C.violet, icon: 'document-text' },
+  { id: 'sick', color: C.amber, icon: 'medkit' },
+  { id: 'late', color: C.coral, icon: 'alarm' },
+];
+const ATT_PALETTE = ['#D4FF3A', '#3DDC97', '#5CC8FF', '#A193FF', '#FFB547', '#FF6A4D', '#FF5A6E', '#FF7AC6'];
 const DOC_TYPES = ['passport', 'pink', 'ci', 'other'];
 const AVATAR_COLORS = [C.lime, C.coral, C.sky, C.violet, C.amber, C.green];
 
 const K = {
-  people: 'np:people:v1', settings: 'np:settings:v1', draft: 'np:draft:v1', log: 'np:log:v1',
+  people: 'np:people:v1', settings: 'np:settings:v1', draft: 'np:draft:v1', log: 'np:log:v1', att: 'np:att:v1',
 };
 
 /* Fields the admin can make required (nameMm + phone are always required). */
@@ -106,6 +116,19 @@ const T = {
     log_status: '{name} → {s}', log_verify: '{name} ဖုန်း အတည်ပြုသည်', log_settings: 'Admin ဆက်တင် ပြောင်းသည်',
     log_restore: 'Backup ပြန်သွင်းသည် ({n})', log_wipe: 'ဒေတာ အားလုံးဖျက်သည်', log_pin: 'PIN ပြောင်းသည်',
     filterAlert: 'သတိပေးချက်ရှိသူ', profileFor: 'လူသစ် အချက်အလက်',
+    attend: 'ရုံးတက်', attTitle: 'နေ့စဉ် ရုံးတက်စာရင်း',
+    att_work: 'အလုပ်လာ', att_off: 'နား', att_absent: 'ပျက်', att_leave: 'ခွင့်', att_sick: 'နေမကောင်း', att_late: 'နောက်ကျ',
+    attNone: 'မမှတ်ရသေး', attMarkRest: 'ကျန်သူအားလုံး "{s}" မှတ်မည်', attBulkDone: '{n} ယောက် မှတ်ပြီးပါပြီ',
+    attNothingLeft: 'မမှတ်ရသေးသူ မရှိတော့ပါ', attReport: 'Report ပို့မည်',
+    attEmpty: 'အလုပ်ဝင်ပြီးသူ မရှိသေးပါ', attEmptySub: '"အလုပ်ဝင်ပြီ" အခြေအနေရှိသူတွေ ဒီမှာ ပေါ်ပါမယ်',
+    attNote: 'မှတ်ချက် (ဥပမာ – ခွင့်ယူရတဲ့ အကြောင်း)', attNoteNeedMark: 'အရင် အမျိုးအစား တစ်ခု ရွေးပါ',
+    attHint: 'နှိပ်ရင် မှတ်၊ ထပ်နှိပ်ရင် ဖြုတ် · နာမည်ကို ဖိထားရင် မှတ်ချက်ရေး',
+    attToday: 'ယနေ့ ရုံးတက်', attThisMonth: 'ဒီလ ရုံးတက်', attLast14: 'နောက်ဆုံး ၁၄ ရက်',
+    attTypes: 'ရုံးတက် အမျိုးအစားများ', attTypesHint: 'ပိတ်ထားတာတွေ ရုံးတက်စာမျက်နှာမှာ မပေါ်တော့ပါ (မှတ်ပြီးသားတွေ မပျောက်ပါ)',
+    attAddType: 'အမျိုးအစား အသစ် နာမည်', attNeedOne: 'အနည်းဆုံး တစ်ခု ဖွင့်ထားရမည်', attExport: '{m} ရုံးတက် Excel (CSV) ပို့မည်',
+    attMonth: 'လ', log_att_bulk: '{d} — {n} ယောက် "{s}" မှတ်သည်', log_att_types: 'ရုံးတက် အမျိုးအစား ပြင်သည်',
+    quickStatus: 'အခြေအနေ အမြန်ပြောင်း', longPressHint: 'ဖိထားရင် အခြေအနေ အမြန်ပြောင်းလို့ရ',
+    wdays: 'တနင်္ဂနွေ,တနင်္လာ,အင်္ဂါ,ဗုဒ္ဓဟူး,ကြာသပတေး,သောကြာ,စနေ', reportHead: '📋 ရုံးတက်စာရင်း', marked: 'မှတ်ပြီး', attDup: 'ဒီနာမည် ရှိပြီးသားပါ',
   },
   th: {
     brand: 'คนใหม่', tagline: 'บันทึกพนักงานใหม่',
@@ -168,6 +191,19 @@ const T = {
     log_status: '{name} → {s}', log_verify: 'ยืนยันเบอร์ {name}', log_settings: 'เปลี่ยนการตั้งค่าแอดมิน',
     log_restore: 'นำเข้าข้อมูลสำรอง ({n})', log_wipe: 'ลบข้อมูลทั้งหมด', log_pin: 'เปลี่ยน PIN',
     filterAlert: 'มีการแจ้งเตือน', profileFor: 'ข้อมูลพนักงานใหม่',
+    attend: 'เข้างาน', attTitle: 'บันทึกเข้างานรายวัน',
+    att_work: 'มาทำงาน', att_off: 'วันหยุด', att_absent: 'ขาดงาน', att_leave: 'ลา', att_sick: 'ลาป่วย', att_late: 'มาสาย',
+    attNone: 'ยังไม่บันทึก', attMarkRest: 'ที่เหลือทั้งหมดเป็น "{s}"', attBulkDone: 'บันทึก {n} คนแล้ว',
+    attNothingLeft: 'บันทึกครบทุกคนแล้ว', attReport: 'ส่งรายงาน',
+    attEmpty: 'ยังไม่มีพนักงานที่เริ่มงาน', attEmptySub: 'คนที่สถานะ "เริ่มงานแล้ว" จะแสดงที่นี่',
+    attNote: 'หมายเหตุ (เช่น เหตุผลที่ลา)', attNoteNeedMark: 'กรุณาเลือกประเภทก่อน',
+    attHint: 'แตะเพื่อบันทึก แตะซ้ำเพื่อยกเลิก · กดชื่อค้างเพื่อเขียนหมายเหตุ',
+    attToday: 'เข้างานวันนี้', attThisMonth: 'เข้างานเดือนนี้', attLast14: '14 วันล่าสุด',
+    attTypes: 'ประเภทการเข้างาน', attTypesHint: 'ประเภทที่ปิดจะไม่แสดงในหน้าเข้างาน (ข้อมูลเดิมไม่หาย)',
+    attAddType: 'ชื่อประเภทใหม่', attNeedOne: 'ต้องเปิดอย่างน้อย 1 ประเภท', attExport: 'ส่งออกเข้างาน {m} (CSV)',
+    attMonth: 'เดือน', log_att_bulk: '{d} — บันทึก {n} คนเป็น "{s}"', log_att_types: 'แก้ไขประเภทการเข้างาน',
+    quickStatus: 'เปลี่ยนสถานะด่วน', longPressHint: 'กดค้างเพื่อเปลี่ยนสถานะด่วน',
+    wdays: 'อาทิตย์,จันทร์,อังคาร,พุธ,พฤหัสบดี,ศุกร์,เสาร์', reportHead: '📋 รายงานเข้างาน', marked: 'บันทึกแล้ว', attDup: 'มีชื่อนี้แล้ว',
   },
   en: {
     brand: 'Newperson', tagline: 'New worker records',
@@ -230,6 +266,19 @@ const T = {
     log_status: '{name} → {s}', log_verify: 'Verified phone of {name}', log_settings: 'Changed admin settings',
     log_restore: 'Restored backup ({n})', log_wipe: 'Deleted all data', log_pin: 'Changed PIN',
     filterAlert: 'Has alerts', profileFor: 'New hire profile',
+    attend: 'Attendance', attTitle: 'Daily attendance',
+    att_work: 'Present', att_off: 'Day off', att_absent: 'Absent', att_leave: 'Leave', att_sick: 'Sick', att_late: 'Late',
+    attNone: 'Not marked', attMarkRest: 'Mark the rest as "{s}"', attBulkDone: 'Marked {n} people',
+    attNothingLeft: 'Everyone is already marked', attReport: 'Share report',
+    attEmpty: 'No one has started work yet', attEmptySub: 'People with status "Started" appear here',
+    attNote: 'Note (e.g. reason for leave)', attNoteNeedMark: 'Pick a type first',
+    attHint: 'Tap to mark, tap again to clear · long-press a name for a note',
+    attToday: "Today's attendance", attThisMonth: 'This month', attLast14: 'Last 14 days',
+    attTypes: 'Attendance types', attTypesHint: 'Switched-off types are hidden on the attendance screen (existing marks are kept)',
+    attAddType: 'New type name', attNeedOne: 'Keep at least one type on', attExport: 'Export {m} attendance (CSV)',
+    attMonth: 'Month', log_att_bulk: '{d} — marked {n} as "{s}"', log_att_types: 'Changed attendance types',
+    quickStatus: 'Quick status change', longPressHint: 'Long-press to change status quickly',
+    wdays: 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday', reportHead: '📋 Attendance', marked: 'Marked', attDup: 'That name already exists',
   },
 };
 const LANGS = [{ id: 'my', label: 'မြန်မာ' }, { id: 'th', label: 'ไทย' }, { id: 'en', label: 'EN' }];
@@ -413,7 +462,101 @@ export function mergeBackup(current, incoming) {
   return { people: Array.from(map.values()), count: valid.length };
 }
 
+/* ── attendance helpers ── att = { 'YYYY-MM-DD': { personId: { c: typeId, n?: note, at: iso } } } */
+export function dayKey(dt) {
+  const p = (n) => String(n).padStart(2, '0');
+  return dt.getFullYear() + '-' + p(dt.getMonth() + 1) + '-' + p(dt.getDate());
+}
+export function keyToDate(k) {
+  const [y, m, d] = String(k).split('-').map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+}
+export function attTypes(settings, includeOff) {
+  const off = (settings && settings.attOff) || [];
+  const b = ATT_BUILTIN.map((x) => ({ ...x, builtin: true, on: !off.includes(x.id) }));
+  const c = ((settings && settings.attCustom) || []).map((x) => ({
+    id: x.id, label: x.label, color: x.color || C.lime, icon: 'ellipse', builtin: false, on: !off.includes(x.id),
+  }));
+  const all = [...b, ...c];
+  return includeOff ? all : all.filter((x) => x.on);
+}
+export function attLabel(type, t) { if (!type) return '?'; return type.builtin ? t('att_' + type.id) : type.label; }
+export function attFind(settings, id) { return attTypes(settings, true).find((x) => x.id === id) || null; }
+export function attPeople(people) { return people.filter((p) => p.status === 'started'); }
+export function setMark(att, day, pid, code, note) {
+  const dayMap = { ...((att && att[day]) || {}) };
+  if (!code) delete dayMap[pid];
+  else dayMap[pid] = { c: code, n: note ? String(note).trim().slice(0, 200) : undefined, at: new Date().toISOString() };
+  const next = { ...(att || {}) };
+  if (Object.keys(dayMap).length) next[day] = dayMap; else delete next[day];
+  return next;
+}
+/* counts per type for one day, limited to the given person ids */
+export function attDayCounts(att, day, ids) {
+  const m = (att && att[day]) || {};
+  const counts = {}; let none = 0;
+  ids.forEach((id) => { const r = m[id]; if (r && r.c) counts[r.c] = (counts[r.c] || 0) + 1; else none += 1; });
+  return { counts, none };
+}
+export function attMonthCounts(att, pid, y, mo) {
+  const out = {};
+  const pre = y + '-' + String(mo + 1).padStart(2, '0') + '-';
+  Object.keys(att || {}).forEach((k) => {
+    if (!k.startsWith(pre)) return;
+    const r = att[k][pid];
+    if (r && r.c) out[r.c] = (out[r.c] || 0) + 1;
+  });
+  return out;
+}
+export function attMonthCsv(att, people, y, mo, settings, t) {
+  const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const nDays = new Date(y, mo + 1, 0).getDate();
+  const pre = y + '-' + String(mo + 1).padStart(2, '0') + '-';
+  const types = attTypes(settings, true);
+  const has = new Set();
+  Object.keys(att || {}).forEach((k) => { if (k.startsWith(pre)) Object.keys(att[k]).forEach((id) => has.add(id)); });
+  const rows = people.filter((p) => p.status === 'started' || has.has(p.id));
+  const head = ['Name', 'Phone', t('dept'), t('shift')];
+  for (let d = 1; d <= nDays; d++) head.push(String(d));
+  types.forEach((ty) => head.push(attLabel(ty, t)));
+  const lines = [head.map(esc).join(',')];
+  rows.forEach((p) => {
+    const cnt = {};
+    const cells = [displayName(p), p.phone ? '\u200B' + p.phone : '', p.dept, p.shift];
+    for (let d = 1; d <= nDays; d++) {
+      const r = (att[pre + String(d).padStart(2, '0')] || {})[p.id];
+      if (r && r.c) { cnt[r.c] = (cnt[r.c] || 0) + 1; cells.push(attLabel(attFind(settings, r.c), t) + (r.n ? ' (' + r.n + ')' : '')); } else cells.push('');
+    }
+    types.forEach((ty) => cells.push(cnt[ty.id] || 0));
+    lines.push(cells.map(esc).join(','));
+  });
+  return '\uFEFF' + lines.join('\r\n');
+}
+export function attReportText(att, day, people, settings, t) {
+  const list = attPeople(people);
+  const m = (att && att[day]) || {};
+  const dt = keyToDate(day);
+  const wd = String(t('wdays')).split(',')[dt.getDay()] || '';
+  const out = [t('reportHead') + (settings.factoryName ? ' — ' + settings.factoryName : ''), wd + ' ' + fmtDate(dt), ''];
+  const groups = {};
+  list.forEach((p) => { const r = m[p.id]; const k = r && r.c ? r.c : '_none'; (groups[k] = groups[k] || []).push(displayName(p) + (r && r.n ? ' (' + r.n + ')' : '')); });
+  attTypes(settings, true).forEach((ty) => { if (groups[ty.id]) out.push('• ' + attLabel(ty, t) + ' (' + groups[ty.id].length + '): ' + groups[ty.id].join(', ')); });
+  if (groups._none) out.push('• ' + t('attNone') + ' (' + groups._none.length + '): ' + groups._none.join(', '));
+  out.push('', t('total') + ': ' + list.length);
+  return out.join('\n');
+}
+export function mergeAtt(cur, inc) {
+  if (!inc || typeof inc !== 'object' || Array.isArray(inc)) return cur || {};
+  const next = { ...(cur || {}) };
+  Object.keys(inc).forEach((k) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !inc[k] || typeof inc[k] !== 'object') return;
+    next[k] = { ...(next[k] || {}), ...inc[k] };
+  });
+  return next;
+}
+
 const DEFAULT_SETTINGS = {
+  attOff: [], attCustom: [],
   onboarded: false, lang: 'my', factoryName: '', recruiterName: '', pinHash: '',
   depts: ['Production', 'Packing', 'QC', 'Warehouse', 'Cleaning'],
   positions: ['Operator', 'Helper', 'Forklift', 'Cleaner', 'Leader'],
@@ -617,12 +760,12 @@ function PhoneCcToggle({ value, onChange, t }) {
 }
 
 /* ───────────────────────── PERSON TICKET (list item) ───────────────────────── */
-function PersonTicket({ p, t, settings, onPress }) {
+function PersonTicket({ p, t, settings, onPress, onLongPress }) {
   const col = STATUS_COLOR[p.status] || C.faint;
   const alerts = personAlerts(p, settings);
   const age = ageFrom(p.dob);
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={displayName(p)} style={({ pressed }) => [st.ticket, pressed && { transform: [{ scale: 0.985 }], opacity: 0.9 }]}>
+    <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={350} accessibilityRole="button" accessibilityLabel={displayName(p)} style={({ pressed }) => [st.ticket, pressed && { transform: [{ scale: 0.985 }], opacity: 0.9 }]}>
       <View style={[st.ticketStripe, { backgroundColor: col }]} />
       <View style={{ flex: 1, padding: SP.md, paddingLeft: SP.lg }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -657,8 +800,12 @@ function PersonTicket({ p, t, settings, onPress }) {
 }
 
 /* ───────────────────────── HOME ───────────────────────── */
-function HomeScreen({ people, settings, t, go, reduce }) {
+function HomeScreen({ people, settings, t, go, reduce, att }) {
   const now = new Date();
+  const workers = attPeople(people);
+  const todayK = dayKey(now);
+  const todayAtt = attDayCounts(att || {}, todayK, workers.map((p) => p.id));
+  const attT = attTypes(settings);
   const counts = useMemo(() => {
     const c = {}; STATUSES.forEach((s) => { c[s] = 0; });
     people.forEach((p) => { c[p.status] = (c[p.status] || 0) + 1; });
@@ -705,6 +852,33 @@ function HomeScreen({ people, settings, t, go, reduce }) {
           </View>
         </View>
       </FadeIn>
+
+      {workers.length ? (
+        <FadeIn delay={90} reduce={reduce}>
+          <SectionTitle title={t('attToday')} icon="calendar-outline"
+            right={<Pressable onPress={() => go('attend')} hitSlop={10}><Txt style={{ color: C.lime, fontWeight: '700' }}>{t('attend')} →</Txt></Pressable>} />
+          <Pressable onPress={() => go('attend')} accessibilityRole="button" style={({ pressed }) => [st.card, pressed && { opacity: 0.85 }]}>
+            <View style={st.stackBar}>
+              {attTypes(settings, true).filter((ty) => todayAtt.counts[ty.id]).map((ty) => <View key={ty.id} style={{ flex: todayAtt.counts[ty.id], backgroundColor: ty.color }} />)}
+              {todayAtt.none ? <View style={{ flex: todayAtt.none, backgroundColor: C.surface2 }} /> : null}
+            </View>
+            <View style={st.attMini}>
+              {attT.map((ty) => (
+                <View key={ty.id} style={st.attMiniCell}>
+                  <View style={[st.pillDot, { backgroundColor: ty.color }]} />
+                  <Txt style={{ color: C.sub, fontSize: F.xs, flex: 1 }} numberOfLines={1}>{attLabel(ty, t)}</Txt>
+                  <Txt style={{ color: C.text, fontWeight: '800' }}>{todayAtt.counts[ty.id] || 0}</Txt>
+                </View>
+              ))}
+              <View style={st.attMiniCell}>
+                <View style={[st.pillDot, { backgroundColor: C.faint }]} />
+                <Txt style={{ color: C.sub, fontSize: F.xs, flex: 1 }} numberOfLines={1}>{t('attNone')}</Txt>
+                <Txt style={{ color: todayAtt.none ? C.amber : C.text, fontWeight: '800' }}>{todayAtt.none}</Txt>
+              </View>
+            </View>
+          </Pressable>
+        </FadeIn>
+      ) : null}
 
       <FadeIn delay={120} reduce={reduce}>
         <SectionTitle title={t('pipeline')} icon="git-commit-outline" />
@@ -794,8 +968,9 @@ function EmptyState({ t, onAdd, title, sub, icon = 'people-outline' }) {
 }
 
 /* ───────────────────────── LIST ───────────────────────── */
-function ListScreen({ people, settings, t, go, params }) {
+function ListScreen({ people, settings, t, go, params, onQuickStatus }) {
   const [q, setQ] = useState('');
+  const [quick, setQuick] = useState(null);
   const [dq, setDq] = useState('');
   const [status, setStatus] = useState(params.status || 'all');
   const [alertF, setAlertF] = useState(params.alert || null);
@@ -857,18 +1032,28 @@ function ListScreen({ people, settings, t, go, params }) {
           </Pressable>
         ))}
       </View>
-      <Txt style={{ color: C.faint, fontSize: F.xs, marginBottom: SP.sm, letterSpacing: 1 }}>{t('people_n', { n: data.length }).toUpperCase()}</Txt>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: SP.sm }}>
+        <Txt style={{ color: C.faint, fontSize: F.xs, letterSpacing: 1, flex: 1 }}>{t('people_n', { n: data.length }).toUpperCase()}</Txt>
+        {data.length && onQuickStatus ? (
+          <>
+            <Ionicons name="hand-left-outline" size={12} color={C.faint} />
+            <Txt style={{ color: C.faint, fontSize: F.xs, marginLeft: 4 }} numberOfLines={1}>{t('longPressHint')}</Txt>
+          </>
+        ) : null}
+      </View>
     </View>
   );
 
+  const quickP = quick ? people.find((p) => p.id === quick) : null;
   return (
+    <>
     <FlatList
       data={data}
       keyExtractor={(p) => p.id}
       ListHeaderComponent={header}
       contentContainerStyle={st.screenPad}
       ItemSeparatorComponent={() => <View style={{ height: SP.md }} />}
-      renderItem={({ item }) => <PersonTicket p={item} t={t} settings={settings} onPress={() => go('detail', { id: item.id })} />}
+      renderItem={({ item }) => <PersonTicket p={item} t={t} settings={settings} onPress={() => go('detail', { id: item.id })} onLongPress={onQuickStatus ? () => setQuick(item.id) : undefined} />}
       ListEmptyComponent={people.length === 0
         ? <EmptyState t={t} onAdd={() => go('form', {})} />
         : <EmptyState t={t} icon="search-outline" title={t('noResults')} sub={q ? '"' + q + '"' : ' '} />}
@@ -878,6 +1063,263 @@ function ListScreen({ people, settings, t, go, params }) {
       windowSize={9}
       removeClippedSubviews
     />
+    <QuickStatusSheet person={quickP} t={t} onClose={() => setQuick(null)}
+      onPick={(s) => { if (quickP && s !== quickP.status) onQuickStatus(quickP.id, s); setQuick(null); }} />
+    </>
+  );
+}
+
+/* ───────────────────────── QUICK STATUS SHEET ───────────────────────── */
+function QuickStatusSheet({ person, t, onPick, onClose }) {
+  return (
+    <Modal visible={!!person} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={st.sheetBg} onPress={onClose} accessibilityLabel={t('close')}>
+        <Pressable style={st.sheet} onPress={() => {}}>
+          <View style={st.sheetGrip} />
+          {person ? (
+            <>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: SP.lg }}>
+                <Avatar name={displayName(person)} size={42} />
+                <View style={{ flex: 1, marginLeft: SP.md }}>
+                  <Txt style={{ color: C.faint, fontSize: F.xs }}>{t('quickStatus')}</Txt>
+                  <Txt style={st.ticketName} numberOfLines={1}>{displayName(person)}</Txt>
+                </View>
+              </View>
+              <View style={st.sheetGrid}>
+                {STATUSES.map((s) => {
+                  const active = person.status === s;
+                  return (
+                    <Pressable key={s} onPress={() => onPick(s)} accessibilityRole="button" accessibilityState={{ selected: active }}
+                      style={({ pressed }) => [st.sheetCell, { borderColor: STATUS_COLOR[s] + (active ? 'FF' : '44') }, active && { backgroundColor: STATUS_COLOR[s] }, pressed && { transform: [{ scale: 0.95 }] }]}>
+                      <Ionicons name={STATUS_ICON[s]} size={22} color={active ? C.limeInk : STATUS_COLOR[s]} />
+                      <Txt style={{ color: active ? C.limeInk : C.text, fontWeight: '700', fontSize: F.sm, marginTop: 4 }} numberOfLines={1}>{t('st_' + s)}</Txt>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <Btn label={t('close')} variant="ghost" onPress={onClose} style={{ marginTop: SP.lg }} />
+            </>
+          ) : null}
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+/* ───────────────────────── ATTENDANCE ───────────────────────── */
+function AttButton({ type, active, onPress, t, big }) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: !!active }} accessibilityLabel={attLabel(type, t)}
+      style={({ pressed }) => [st.attBtn, big && { minHeight: 62 }, { borderColor: active ? type.color : type.color + '40' }, active && { backgroundColor: type.color }, pressed && { transform: [{ scale: 0.92 }] }]}>
+      <Ionicons name={active ? type.icon : type.icon + '-outline'} size={big ? 22 : 19} color={active ? C.limeInk : type.color} />
+      <Txt style={[st.attBtnTxt, { color: active ? C.limeInk : C.sub }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{attLabel(type, t)}</Txt>
+    </Pressable>
+  );
+}
+
+function AttPill({ type, t }) {
+  const col = type ? type.color : C.faint;
+  return (
+    <View style={[st.pill, { borderColor: col + '88', backgroundColor: col + '22' }]}>
+      <Ionicons name={type ? type.icon : 'help'} size={12} color={col} style={{ marginRight: 4 }} />
+      <Txt style={[st.pillTxt, { color: col }]} numberOfLines={1}>{attLabel(type, t)}</Txt>
+    </View>
+  );
+}
+
+function AttRow({ p, rec, types, settings, t, onSet, onLong }) {
+  const cur = rec && rec.c ? attFind(settings, rec.c) : null;
+  return (
+    <View style={[st.attRow, cur && { borderColor: cur.color + '77' }]}>
+      {cur ? <View style={[st.attGlow, { backgroundColor: cur.color }]} /> : null}
+      <Pressable onLongPress={onLong} delayLongPress={350} style={{ flexDirection: 'row', alignItems: 'center' }} accessibilityHint={t('attNote')}>
+        <Avatar name={displayName(p)} size={38} />
+        <View style={{ flex: 1, marginLeft: SP.md }}>
+          <Txt style={st.attName} numberOfLines={1}>{displayName(p)}</Txt>
+          <Txt style={st.ticketSub} numberOfLines={1}>{[p.shift, p.dept, p.position].filter(Boolean).join(' · ') || formatPhone(p.phone, p.phoneCc)}</Txt>
+        </View>
+        {cur ? <AttPill type={cur} t={t} /> : <Txt style={{ color: C.faint, fontSize: F.xs }}>{t('attNone')}</Txt>}
+      </Pressable>
+      {rec && rec.n ? (
+        <View style={st.attNoteRow}>
+          <Ionicons name="chatbubble-ellipses-outline" size={13} color={C.sub} />
+          <Txt style={{ color: C.sub, fontSize: F.sm, marginLeft: 6, flex: 1 }} numberOfLines={2}>{rec.n}</Txt>
+        </View>
+      ) : null}
+      <View style={st.attBtnRow}>
+        {types.map((ty) => (
+          <AttButton key={ty.id} type={ty} t={t} active={!!rec && rec.c === ty.id} onPress={() => onSet(rec && rec.c === ty.id ? null : ty.id)} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function AttendanceScreen({ people, att, settings, t, onMark, onBulk, notify }) {
+  const today = dayKey(new Date());
+  const [day, setDay] = useState(today);
+  const [shift, setShift] = useState('all');
+  const [markF, setMarkF] = useState(null);
+  const [q, setQ] = useState('');
+  const [noteFor, setNoteFor] = useState(null);
+  const [noteTxt, setNoteTxt] = useState('');
+  const types = attTypes(settings);
+  const base = useMemo(() => attPeople(people), [people]);
+  const shifts = useMemo(() => {
+    const s = []; (settings.shifts || []).forEach((x) => { if (!s.includes(x)) s.push(x); });
+    base.forEach((p) => { if (p.shift && !s.includes(p.shift)) s.push(p.shift); });
+    return s;
+  }, [base, settings.shifts]);
+  const inShift = base.filter((p) => shift === 'all' || p.shift === shift);
+  const dayMap = (att && att[day]) || {};
+  const { counts, none } = attDayCounts(att, day, inShift.map((p) => p.id));
+  const ql = q.trim().toLowerCase();
+  const list = inShift.filter((p) => {
+    const r = dayMap[p.id];
+    if (markF === '_none' && r && r.c) return false;
+    if (markF && markF !== '_none' && !(r && r.c === markF)) return false;
+    if (ql && ![p.nameMm, p.nameEn, p.nickname, p.dept, p.position, p.phone].join(' ').toLowerCase().includes(ql)) return false;
+    return true;
+  }).sort((a, b) => String(a.shift || '').localeCompare(String(b.shift || '')) || displayName(a).localeCompare(displayName(b)));
+
+  const dt = keyToDate(day);
+  const wd = String(t('wdays')).split(',')[dt.getDay()] || '';
+  const moveDay = (n) => {
+    const d = keyToDate(day); d.setDate(d.getDate() + n);
+    const k = dayKey(d);
+    if (k > today) return;
+    setDay(k);
+  };
+  const first = types[0];
+  const bulk = () => {
+    if (!first) return;
+    const ids = inShift.filter((p) => !(dayMap[p.id] && dayMap[p.id].c)).map((p) => p.id);
+    if (!ids.length) { notify(t('attNothingLeft'), 'warn'); return; }
+    Alert.alert(t('attMarkRest', { s: attLabel(first, t) }), fmtDate(dt) + ' · ' + t('people_n', { n: ids.length }), [
+      { text: t('cancel'), style: 'cancel' },
+      { text: t('ok'), onPress: () => onBulk(day, first.id, ids) },
+    ]);
+  };
+  const share = () => {
+    let msg = attReportText(att, day, inShift, settings, t);
+    if (shift !== 'all') msg = msg.replace('\n', ' · ' + shift + '\n');
+    Share.share({ message: msg }).catch(() => {});
+  };
+  const openNote = (p) => {
+    const r = dayMap[p.id];
+    if (!(r && r.c)) { notify(t('attNoteNeedMark'), 'warn'); return; }
+    setNoteTxt(r.n || ''); setNoteFor(p);
+  };
+  const totalN = inShift.length || 1;
+  const markedN = inShift.length - none;
+
+  const header = (
+    <View>
+      <Txt style={st.screenTitle}>{t('attTitle')}</Txt>
+      <View style={st.dateCard}>
+        <Pressable onPress={() => moveDay(-1)} style={st.dateArrow} hitSlop={8} accessibilityLabel="previous day"><Ionicons name="chevron-back" size={22} color={C.limeInk} /></Pressable>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Txt style={st.dateWd} numberOfLines={1}>{wd}{day === today ? ' · ' + t('today') : ''}</Txt>
+          <Txt style={st.dateBig}>{fmtDate(dt)}</Txt>
+        </View>
+        <Pressable onPress={() => moveDay(1)} disabled={day >= today} style={[st.dateArrow, day >= today && { opacity: 0.3 }]} hitSlop={8} accessibilityLabel="next day"><Ionicons name="chevron-forward" size={22} color={C.limeInk} /></Pressable>
+      </View>
+      {day !== today ? (
+        <Pressable onPress={() => setDay(today)} style={{ alignSelf: 'center', marginTop: SP.sm }} hitSlop={8}>
+          <Txt style={{ color: C.lime, fontWeight: '800' }}>↺ {t('today')}</Txt>
+        </Pressable>
+      ) : null}
+
+      <Card style={{ marginTop: SP.md }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginBottom: SP.sm }}>
+          <Txt style={{ color: C.text, fontSize: F.xxl, fontWeight: '900', lineHeight: F.xxl * 1.2 }}>{markedN}</Txt>
+          <Txt style={{ color: C.faint, fontSize: F.lg, fontWeight: '800', marginLeft: 4, marginBottom: 4 }}>/ {inShift.length}</Txt>
+          <Txt style={{ color: C.sub, fontSize: F.sm, marginLeft: SP.sm, marginBottom: 6, flex: 1 }} numberOfLines={1}>{t('marked')}</Txt>
+        </View>
+        <View style={st.stackBar}>
+          {inShift.length === 0 ? <View style={{ flex: 1, backgroundColor: C.surface2 }} /> : (
+            <>
+              {attTypes(settings, true).filter((ty) => counts[ty.id]).map((ty) => <View key={ty.id} style={{ flex: counts[ty.id] / totalN, backgroundColor: ty.color }} />)}
+              {none ? <View style={{ flex: none / totalN, backgroundColor: C.surface2 }} /> : null}
+            </>
+          )}
+        </View>
+        <View style={st.attTiles}>
+          {types.map((ty) => (
+            <Pressable key={ty.id} onPress={() => setMarkF(markF === ty.id ? null : ty.id)} accessibilityRole="button" accessibilityState={{ selected: markF === ty.id }}
+              style={[st.attTile, markF === ty.id && { backgroundColor: ty.color + '2A', borderColor: ty.color }]}>
+              <Txt style={{ color: ty.color, fontSize: F.xl, fontWeight: '900', lineHeight: F.xl * 1.25 }}>{counts[ty.id] || 0}</Txt>
+              <Txt style={{ color: C.sub, fontSize: F.xs }} numberOfLines={1}>{attLabel(ty, t)}</Txt>
+            </Pressable>
+          ))}
+          <Pressable onPress={() => setMarkF(markF === '_none' ? null : '_none')} accessibilityRole="button" accessibilityState={{ selected: markF === '_none' }}
+            style={[st.attTile, markF === '_none' && { backgroundColor: C.surface2, borderColor: C.sub }]}>
+            <Txt style={{ color: C.text, fontSize: F.xl, fontWeight: '900', lineHeight: F.xl * 1.25 }}>{none}</Txt>
+            <Txt style={{ color: C.sub, fontSize: F.xs }} numberOfLines={1}>{t('attNone')}</Txt>
+          </Pressable>
+        </View>
+      </Card>
+
+      {shifts.length ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: SP.sm, paddingTop: SP.md }}>
+          <Chip label={t('all')} active={shift === 'all'} onPress={() => setShift('all')} count={base.length} />
+          {shifts.map((s) => <Chip key={s} label={s} icon="moon-outline" active={shift === s} onPress={() => setShift(s)} count={base.filter((p) => p.shift === s).length} />)}
+        </ScrollView>
+      ) : null}
+
+      <View style={[st.searchBox, { marginTop: SP.md }]}>
+        <Ionicons name="search" size={18} color={C.sub} />
+        <TextInput value={q} onChangeText={setQ} placeholder={t('search')} placeholderTextColor={C.faint} style={st.searchInput} autoCorrect={false} accessibilityLabel={t('search')} />
+        {q ? <Pressable onPress={() => setQ('')} hitSlop={10}><Ionicons name="close-circle" size={18} color={C.sub} /></Pressable> : null}
+      </View>
+
+      <View style={{ flexDirection: 'row', gap: SP.sm, marginTop: SP.md }}>
+        <Btn small label={first ? attLabel(first, t) + ' ✓ ' + none : '—'} icon="checkmark-done" onPress={bulk} disabled={!first || !none} style={{ flex: 1 }} a11y={first ? t('attMarkRest', { s: attLabel(first, t) }) : ''} />
+        <Btn small label={t('attReport')} icon="share-social-outline" variant="soft" onPress={share} disabled={!inShift.length} style={{ flex: 1 }} />
+      </View>
+      <Txt style={{ color: C.faint, fontSize: F.xs, marginTop: SP.sm, marginBottom: SP.md }}>{t('attHint')}</Txt>
+    </View>
+  );
+
+  return (
+    <>
+      <FlatList
+        data={list}
+        keyExtractor={(p) => p.id}
+        ListHeaderComponent={header}
+        contentContainerStyle={st.screenPad}
+        ItemSeparatorComponent={() => <View style={{ height: SP.md }} />}
+        renderItem={({ item }) => (
+          <AttRow p={item} rec={dayMap[item.id]} types={types} settings={settings} t={t}
+            onSet={(code) => onMark(item.id, day, code, code ? (dayMap[item.id] && dayMap[item.id].n) : undefined)}
+            onLong={() => openNote(item)} />
+        )}
+        ListEmptyComponent={base.length === 0
+          ? <EmptyState t={t} icon="calendar-outline" title={t('attEmpty')} sub={t('attEmptySub')} />
+          : <EmptyState t={t} icon="search-outline" title={t('noResults')} sub=" " />}
+        ListFooterComponent={<View style={{ height: 120 }} />}
+        keyboardShouldPersistTaps="handled"
+        initialNumToRender={10}
+        windowSize={9}
+      />
+      <Modal visible={!!noteFor} transparent animationType="fade" onRequestClose={() => setNoteFor(null)}>
+        <View style={st.modalBg}>
+          <View style={st.modalCard}>
+            <Txt style={st.modalTitle} numberOfLines={2}>{noteFor ? displayName(noteFor) : ''}</Txt>
+            <Txt style={{ color: C.sub, marginBottom: SP.md }}>{wd} {fmtDate(dt)}</Txt>
+            <Field label={t('attNote')} value={noteTxt} onChangeText={setNoteTxt} multiline maxLength={200} autoCapitalize="sentences" />
+            <View style={{ flexDirection: 'row', gap: SP.sm }}>
+              <Btn label={t('cancel')} variant="ghost" style={{ flex: 1 }} onPress={() => setNoteFor(null)} />
+              <Btn label={t('save')} style={{ flex: 1 }} onPress={() => {
+                const r = noteFor && dayMap[noteFor.id];
+                if (r && r.c) onMark(noteFor.id, day, r.c, noteTxt);
+                setNoteFor(null);
+              }} />
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -1153,7 +1595,7 @@ function PersonForm({ initial, people, settings, t, onSave, onCancel, guardRef, 
 }
 
 /* ───────────────────────── DETAIL ───────────────────────── */
-function DetailScreen({ person: p, settings, t, back, onEdit, onDelete, onPatch, notify }) {
+function DetailScreen({ person: p, settings, t, back, onEdit, onDelete, onPatch, notify, att, onMark }) {
   if (!p) {
     return (
       <View style={{ flex: 1 }}>
@@ -1166,6 +1608,15 @@ function DetailScreen({ person: p, settings, t, back, onEdit, onDelete, onPatch,
   }
   const age = ageFrom(p.dob);
   const exp = daysUntil(p.docExpiry);
+  const attAll = att || {};
+  const nowD = new Date();
+  const todayK = dayKey(nowD);
+  const todayRec = (attAll[todayK] || {})[p.id];
+  const monthCnt = attMonthCounts(attAll, p.id, nowD.getFullYear(), nowD.getMonth());
+  const last14 = [];
+  for (let i = 13; i >= 0; i--) { const d = new Date(nowD.getFullYear(), nowD.getMonth(), nowD.getDate() - i); const k = dayKey(d); last14.push({ k, d, r: (attAll[k] || {})[p.id] }); }
+  const showAtt = p.status === 'started' || last14.some((x) => x.r) || Object.keys(monthCnt).length > 0;
+  const attOn = attTypes(settings);
   const open = async (url, failKey) => {
     // canOpenURL() returns false for tel:/sms: on Android 11+ without manifest <queries>,
     // so open directly and only report failure if it really fails.
@@ -1253,6 +1704,42 @@ function DetailScreen({ person: p, settings, t, back, onEdit, onDelete, onPatch,
               onPress={() => { if (s !== p.status) onPatch({ status: s }, 'status'); }} />
           ))}
         </ScrollView>
+
+        {showAtt ? (
+          <>
+            <SectionTitle title={t('attToday')} icon="calendar-outline" right={<Txt style={{ color: C.faint, fontSize: F.xs }}>{fmtDate(nowD)}</Txt>} />
+            <Card>
+              <View style={st.attBtnRow}>
+                {attOn.map((ty) => (
+                  <AttButton key={ty.id} type={ty} t={t} big active={!!todayRec && todayRec.c === ty.id}
+                    onPress={() => onMark && onMark(todayK, todayRec && todayRec.c === ty.id ? null : ty.id, todayRec && todayRec.n)} />
+                ))}
+              </View>
+              {todayRec && todayRec.n ? <Txt style={{ color: C.sub, fontSize: F.sm, marginTop: SP.sm }}>💬 {todayRec.n}</Txt> : null}
+              <Txt style={[st.label, { marginTop: SP.lg }]}>{t('attLast14')}</Txt>
+              <View style={st.strip}>
+                {last14.map((x) => {
+                  const ty = x.r && x.r.c ? attFind(settings, x.r.c) : null;
+                  return (
+                    <View key={x.k} style={{ flex: 1, alignItems: 'center' }}>
+                      <View style={[st.stripCell, { backgroundColor: ty ? ty.color : C.surface2 }, x.k === todayK && { borderWidth: 2, borderColor: C.text }]} />
+                      <Txt style={{ color: x.d.getDay() === 0 ? C.coral : C.faint, fontSize: 9, lineHeight: 14 }}>{x.d.getDate()}</Txt>
+                    </View>
+                  );
+                })}
+              </View>
+              <Txt style={[st.label, { marginTop: SP.md }]}>{t('attThisMonth')}</Txt>
+              <View style={st.chipWrap}>
+                {attTypes(settings, true).filter((ty) => ty.on || monthCnt[ty.id]).map((ty) => (
+                  <View key={ty.id} style={[st.pill, { borderColor: ty.color + '66', backgroundColor: ty.color + '18', paddingVertical: 5 }]}>
+                    <View style={[st.pillDot, { backgroundColor: ty.color }]} />
+                    <Txt style={[st.pillTxt, { color: C.text }]}>{attLabel(ty, t)}  <Txt style={{ fontWeight: '900', color: ty.color }}>{monthCnt[ty.id] || 0}</Txt></Txt>
+                  </View>
+                ))}
+              </View>
+            </Card>
+          </>
+        ) : null}
 
         {exp != null && exp <= (settings.expiryDays || 60) && p.status !== 'left' && p.status !== 'rejected' ? (
           <View style={[st.banner, { borderColor: C.coral + '66', backgroundColor: C.coral + '14', marginTop: SP.md }]}>
@@ -1421,7 +1908,7 @@ function ListEditor({ title, items, onChange, t, icon }) {
   );
 }
 
-function AdminScreen({ settings, setSettings, people, setPeopleAll, log, addLog, t, notify, unlocked, setUnlocked, lang, setLang }) {
+function AdminScreen({ settings, setSettings, people, setPeopleAll, log, addLog, t, notify, unlocked, setUnlocked, lang, setLang, att, setAttAll }) {
   const [err, setErr] = useState(0);
   const [fails, setFails] = useState(0);
   const [lockUntil, setLockUntil] = useState(0);
@@ -1432,6 +1919,9 @@ function AdminScreen({ settings, setSettings, people, setPeopleAll, log, addLog,
   const [pins, setPins] = useState({ old: '', a: '', b: '' });
   const [pinErr, setPinErr] = useState('');
   const [local, setLocal] = useState(settings);
+  const [newType, setNewType] = useState('');
+  const [newColor, setNewColor] = useState(ATT_PALETTE[0]);
+  const [expM, setExpM] = useState(() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; });
   useEffect(() => { setLocal(settings); }, [settings]);
 
   useEffect(() => {
@@ -1469,8 +1959,42 @@ function AdminScreen({ settings, setSettings, people, setPeopleAll, log, addLog,
   const counts = {}; STATUSES.forEach((s) => { counts[s] = people.filter((p) => p.status === s).length; });
 
   const exportCsv = () => Share.share({ message: toCsv(people), title: 'newperson.csv' }).catch(() => {});
+  const attAll = att || {};
+  const toggleType = (id, on) => {
+    const off = local.attOff || [];
+    if (!on && attTypes(local).length <= 1) { notify(t('attNeedOne'), 'error'); return; }
+    update({ attOff: on ? off.filter((x) => x !== id) : [...off, id] }, true);
+    addLog(t('log_att_types'));
+  };
+  const removeType = (ty) => {
+    const others = attTypes(local).filter((x) => x.id !== ty.id);
+    if (ty.on && !others.length) { notify(t('attNeedOne'), 'error'); return; }
+    Alert.alert(t('delete'), attLabel(ty, t), [
+      { text: t('cancel'), style: 'cancel' },
+      { text: t('delete'), style: 'destructive', onPress: () => {
+        update({ attCustom: (local.attCustom || []).filter((x) => x.id !== ty.id), attOff: (local.attOff || []).filter((x) => x !== ty.id) }, true);
+        addLog(t('log_att_types'));
+      } },
+    ]);
+  };
+  const addType = () => {
+    const label = newType.trim().slice(0, 24);
+    if (!label) return;
+    const all = attTypes(local, true);
+    if (all.some((x) => attLabel(x, t).toLowerCase() === label.toLowerCase())) { notify(t('attDup'), 'warn'); setNewType(''); return; }
+    if (all.length >= 12) return;
+    update({ attCustom: [...(local.attCustom || []), { id: 'c_' + uid(), label, color: newColor }] }, true);
+    addLog(t('log_att_types'));
+    setNewType(''); notify(t('settingsSaved'));
+  };
+  const moveMonth = (n) => setExpM(({ y, m }) => { const d = new Date(y, m + n, 1); return { y: d.getFullYear(), m: d.getMonth() }; });
+  const monthLbl = String(expM.m + 1).padStart(2, '0') + '/' + expM.y;
+  const exportAtt = () => Share.share({
+    message: attMonthCsv(attAll, people, expM.y, expM.m, settings, t),
+    title: 'attendance-' + expM.y + '-' + String(expM.m + 1).padStart(2, '0') + '.csv',
+  }).catch(() => {});
   const exportBackup = () => Share.share({
-    message: JSON.stringify({ app: 'newperson', version: 1, exportedAt: new Date().toISOString(), people }),
+    message: JSON.stringify({ app: 'newperson', version: 2, exportedAt: new Date().toISOString(), people, attendance: attAll }),
     title: 'newperson-backup.json',
   }).catch(() => {});
   const doRestore = () => {
@@ -1480,6 +2004,7 @@ function AdminScreen({ settings, setSettings, people, setPeopleAll, log, addLog,
       const res = mergeBackup(people, arr);
       if (!res) throw new Error('bad');
       setPeopleAll(res.people);
+      if (obj && obj.attendance && setAttAll) setAttAll(mergeAtt(attAll, obj.attendance));
       addLog(t('log_restore', { n: res.count }));
       notify(t('restoreDone', { n: res.count }));
       setRestoreModal(false); setRestoreTxt('');
@@ -1530,6 +2055,40 @@ function AdminScreen({ settings, setSettings, people, setPeopleAll, log, addLog,
         <ListEditor t={t} icon="moon-outline" title={t('shifts')} items={local.shifts || []} onChange={(v) => update({ shifts: v })} />
       </Card>
 
+      <SectionTitle title={t('attTypes')} icon="calendar-outline" />
+      <Card>
+        <Txt style={{ color: C.sub, fontSize: F.sm, marginBottom: SP.sm }}>{t('attTypesHint')}</Txt>
+        {attTypes(local, true).map((ty) => (
+          <View key={ty.id} style={st.switchRow}>
+            <View style={[st.attSwatch, { backgroundColor: ty.color }]}><Ionicons name={ty.icon} size={15} color={C.limeInk} /></View>
+            <Txt style={{ color: ty.on ? C.text : C.faint, flex: 1, marginLeft: SP.md }} numberOfLines={1}>{attLabel(ty, t)}</Txt>
+            {!ty.builtin ? (
+              <Pressable onPress={() => removeType(ty)} hitSlop={8} style={{ marginRight: SP.md }} accessibilityLabel={t('delete') + ' ' + attLabel(ty, t)}>
+                <Ionicons name="trash-outline" size={18} color={C.red} />
+              </Pressable>
+            ) : null}
+            <Switch value={ty.on} onValueChange={(v) => toggleType(ty.id, v)} trackColor={{ true: ty.color, false: C.line }} thumbColor={C.text} />
+          </View>
+        ))}
+        <View style={[st.inputWrap, { marginTop: SP.md }]}>
+          <View style={[st.attSwatch, { backgroundColor: newColor, marginLeft: SP.sm }]}><Ionicons name="ellipse" size={13} color={C.limeInk} /></View>
+          <TextInput value={newType} onChangeText={setNewType} placeholder={t('attAddType')} placeholderTextColor={C.faint} style={st.input} onSubmitEditing={addType} returnKeyType="done" maxLength={24} accessibilityLabel={t('attAddType')} />
+          <Pressable onPress={addType} style={st.inlineBtn} accessibilityLabel="add"><Ionicons name="add" size={18} color={C.limeInk} /></Pressable>
+        </View>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: SP.md }}>
+          {ATT_PALETTE.map((c) => (
+            <Pressable key={c} onPress={() => setNewColor(c)} accessibilityRole="button" accessibilityState={{ selected: newColor === c }} accessibilityLabel={c}
+              style={[st.swatchPick, { backgroundColor: c }, newColor === c && { borderColor: C.text, transform: [{ scale: 1.12 }] }]} />
+          ))}
+        </View>
+        <View style={[st.switchRow, { marginTop: SP.lg, borderTopWidth: 1, borderTopColor: C.line, paddingTop: SP.sm }]}>
+          <Pressable onPress={() => moveMonth(-1)} hitSlop={8} style={st.iconBtn} accessibilityLabel="previous month"><Ionicons name="chevron-back" size={18} color={C.text} /></Pressable>
+          <Txt style={{ color: C.text, fontWeight: '800', flex: 1, textAlign: 'center' }}>{t('attMonth')} {monthLbl}</Txt>
+          <Pressable onPress={() => moveMonth(1)} hitSlop={8} style={st.iconBtn} accessibilityLabel="next month"><Ionicons name="chevron-forward" size={18} color={C.text} /></Pressable>
+        </View>
+        <Btn label={t('attExport', { m: monthLbl })} icon="grid-outline" variant="soft" onPress={exportAtt} disabled={!people.length} style={{ marginTop: SP.sm }} />
+      </Card>
+
       <SectionTitle title={t('requiredFields')} icon="checkbox-outline" />
       <Card>
         <Txt style={{ color: C.sub, fontSize: F.sm, marginBottom: SP.sm }}>{t('requiredHint')}</Txt>
@@ -1574,7 +2133,7 @@ function AdminScreen({ settings, setSettings, people, setPeopleAll, log, addLog,
         <Btn label={t('changePin')} icon="key-outline" variant="ghost" onPress={() => setPinModal(true)} />
         <Btn label={t('wipe')} icon="trash-outline" variant="danger" disabled={!people.length} onPress={() => Alert.alert(t('wipe'), t('wipeConfirm'), [
           { text: t('cancel'), style: 'cancel' },
-          { text: t('wipe'), style: 'destructive', onPress: () => { setPeopleAll([]); addLog(t('log_wipe')); notify(t('wipeDone')); } },
+          { text: t('wipe'), style: 'destructive', onPress: () => { setPeopleAll([]); if (setAttAll) setAttAll({}); addLog(t('log_wipe')); notify(t('wipeDone')); } },
         ])} />
       </Card>
 
@@ -1588,7 +2147,7 @@ function AdminScreen({ settings, setSettings, people, setPeopleAll, log, addLog,
           </View>
         ))}
       </Card>
-      <Txt style={{ color: C.faint, textAlign: 'center', marginTop: SP.xl, fontSize: F.xs }}>Newperson v1.0.0</Txt>
+      <Txt style={{ color: C.faint, textAlign: 'center', marginTop: SP.xl, fontSize: F.xs }}>Newperson v1.1.0</Txt>
       <View style={{ height: 120 }} />
 
       <Modal visible={pinModal} transparent animationType="fade" onRequestClose={() => setPinModal(false)}>
@@ -1688,6 +2247,8 @@ export default function App() {
   const [settings, setSettingsState] = useState(DEFAULT_SETTINGS);
   const [people, setPeople] = useState([]);
   const [log, setLog] = useState([]);
+  const [att, setAtt] = useState({});
+  const attRef = useRef(att);
   const [tab, setTab] = useState('home');
   const [stack, setStack] = useState([]); // overlay screens: {name, params}
   const [listParams, setListParams] = useState({});
@@ -1706,7 +2267,8 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        const [s, p, l] = await Promise.all([AsyncStorage.getItem(K.settings), AsyncStorage.getItem(K.people), AsyncStorage.getItem(K.log)]);
+        const [s, p, l, a] = await Promise.all([AsyncStorage.getItem(K.settings), AsyncStorage.getItem(K.people), AsyncStorage.getItem(K.log), AsyncStorage.getItem(K.att)]);
+        if (a) { const obj = JSON.parse(a); if (obj && typeof obj === 'object' && !Array.isArray(obj)) { attRef.current = obj; setAtt(obj); } }
         if (s) setSettingsState({ ...DEFAULT_SETTINGS, ...JSON.parse(s) });
         if (p) { const arr = JSON.parse(p); if (Array.isArray(arr)) setPeople(arr); }
         if (l) { const arr = JSON.parse(l); if (Array.isArray(arr)) setLog(arr); }
@@ -1727,6 +2289,23 @@ export default function App() {
     setSettingsState(next);
     AsyncStorage.setItem(K.settings, JSON.stringify(next)).catch(() => notify(t('saveFailed'), 'error'));
   };
+  const setAttAll = async (next) => {
+    const prev = attRef.current;
+    attRef.current = next; setAtt(next);
+    try { await AsyncStorage.setItem(K.att, JSON.stringify(next)); return true; } catch (e) {
+      attRef.current = prev; setAtt(prev); notify(t('saveFailed'), 'error'); return false;
+    }
+  };
+  const markAtt = (pid, day, code, note) => setAttAll(setMark(attRef.current, day, pid, code, note));
+  const bulkAtt = async (day, code, ids) => {
+    let next = attRef.current;
+    ids.forEach((id) => { next = setMark(next, day, id, code); });
+    const ok = await setAttAll(next);
+    if (!ok) return;
+    const ty = attFind(settings, code);
+    addLog(t('log_att_bulk', { d: fmtDate(keyToDate(day)), n: ids.length, s: attLabel(ty, t) }));
+    notify(t('attBulkDone', { n: ids.length }));
+  };
   const addLog = (text) => {
     setLog((prev) => {
       const next = [{ text, at: new Date().toISOString() }, ...prev].slice(0, 200);
@@ -1737,6 +2316,7 @@ export default function App() {
 
   const go = (name, params = {}) => {
     if (name === 'list') { setListParams({ ...params, _k: Date.now() }); setStack([]); setTab('list'); return; }
+    if (name === 'attend') { setStack([]); setTab('attend'); return; }
     setStack((s) => [...s, { name, params }]);
   };
   const back = () => setStack((s) => s.slice(0, -1));
@@ -1819,7 +2399,8 @@ export default function App() {
       <DetailScreen key={'detail-' + top.params.id} person={person} settings={settings} t={t} back={back} notify={notify}
         onEdit={() => go('form', { id: top.params.id })}
         onDelete={() => deletePerson(top.params.id)}
-        onPatch={(patch, kind) => patchPerson(top.params.id, patch, kind)} />
+        onPatch={(patch, kind) => patchPerson(top.params.id, patch, kind)}
+        att={att} onMark={(day, code, note) => markAtt(top.params.id, day, code, note)} />
     );
   }
 
@@ -1827,6 +2408,7 @@ export default function App() {
     { id: 'home', icon: 'grid', label: t('home') },
     { id: 'list', icon: 'people', label: t('people') },
     { id: 'add', icon: 'add', label: t('add') },
+    { id: 'attend', icon: 'calendar', label: t('attend') },
     { id: 'admin', icon: 'settings', label: t('admin') },
   ];
 
@@ -1836,12 +2418,13 @@ export default function App() {
       <View style={{ flex: 1, paddingTop: TOP }}>
         {overlay || (
           <View style={{ flex: 1 }}>
-            {tab === 'home' && <HomeScreen people={people} settings={settings} t={t} go={go} reduce={reduce} />}
-            {tab === 'list' && <ListScreen people={people} settings={settings} t={t} go={go} params={listParams} />}
+            {tab === 'home' && <HomeScreen people={people} settings={settings} t={t} go={go} reduce={reduce} att={att} />}
+            {tab === 'list' && <ListScreen people={people} settings={settings} t={t} go={go} params={listParams} onQuickStatus={(id, s) => patchPerson(id, { status: s }, 'status')} />}
+            {tab === 'attend' && <AttendanceScreen people={people} att={att} settings={settings} t={t} onMark={markAtt} onBulk={bulkAtt} notify={notify} />}
             {tab === 'admin' && (
               <AdminScreen settings={settings} setSettings={setSettings} people={people} setPeopleAll={setPeopleAll}
                 log={log} addLog={addLog} t={t} notify={notify} unlocked={unlocked} setUnlocked={setUnlocked}
-                lang={lang} setLang={(l) => setSettings({ ...settings, lang: l })} />
+                lang={lang} setLang={(l) => setSettings({ ...settings, lang: l })} att={att} setAttAll={setAttAll} />
             )}
           </View>
         )}
@@ -2008,9 +2591,36 @@ const st = StyleSheet.create({
   navDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: C.lime, marginTop: 2 },
   navAdd: { width: 60, height: 60, borderRadius: 22, backgroundColor: C.lime, alignItems: 'center', justifyContent: 'center', marginHorizontal: 6, marginTop: -26, transform: [{ rotate: '-6deg' }], elevation: 8, borderWidth: 4, borderColor: C.bg },
 
+  sheetBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
+  sheet: { backgroundColor: C.surface, borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: SP.xl, paddingTop: SP.md, borderWidth: 1, borderColor: C.line },
+  sheetGrip: { alignSelf: 'center', width: 44, height: 5, borderRadius: 3, backgroundColor: C.line, marginBottom: SP.lg },
+  sheetGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SP.sm },
+  sheetCell: { width: '31.5%', minHeight: 78, borderRadius: R.md, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', padding: SP.sm, backgroundColor: C.bg },
+
+  dateCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.lime, borderRadius: 24, padding: SP.sm, overflow: 'hidden' },
+  dateArrow: { width: 46, height: 46, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.1)', alignItems: 'center', justifyContent: 'center' },
+  dateWd: { color: C.limeInk, fontSize: F.sm, fontWeight: '700', opacity: 0.75, lineHeight: F.sm * 1.6 },
+  dateBig: { color: C.limeInk, fontSize: 28, fontWeight: '900', letterSpacing: -0.5, lineHeight: 36 },
+  attTiles: { flexDirection: 'row', flexWrap: 'wrap', gap: SP.sm, marginTop: SP.md },
+  attTile: { width: '31.5%', backgroundColor: C.bg, borderRadius: R.sm, borderWidth: 1.5, borderColor: C.line, paddingVertical: SP.sm, paddingHorizontal: SP.sm },
+  attMini: { flexDirection: 'row', flexWrap: 'wrap', marginTop: SP.md },
+  attMiniCell: { width: '50%', flexDirection: 'row', alignItems: 'center', paddingVertical: 4, paddingRight: SP.md },
+
+  attRow: { backgroundColor: C.surface, borderRadius: R.lg, borderWidth: 1.5, borderColor: C.line, padding: SP.md, overflow: 'hidden' },
+  attGlow: { position: 'absolute', right: -40, top: -40, width: 110, height: 110, borderRadius: 55, opacity: 0.12 },
+  attName: { color: C.text, fontSize: F.md, fontWeight: '800', lineHeight: F.md * 1.5 },
+  attNoteRow: { flexDirection: 'row', alignItems: 'center', marginTop: SP.sm, backgroundColor: C.bg, borderRadius: R.sm, paddingHorizontal: SP.sm, paddingVertical: 6 },
+  attBtnRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: SP.md },
+  attBtn: { flexGrow: 1, flexBasis: 42, minHeight: 52, borderRadius: 14, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2, backgroundColor: C.bg },
+  attBtnTxt: { fontSize: 10, fontWeight: '700', marginTop: 2, lineHeight: 15 },
+  attSwatch: { width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  swatchPick: { width: 30, height: 30, borderRadius: 15, borderWidth: 3, borderColor: 'transparent' },
+  strip: { flexDirection: 'row', gap: 3 },
+  stripCell: { width: '100%', aspectRatio: 1, maxWidth: 22, borderRadius: 6 },
+
   toast: { position: 'absolute', left: SP.lg, right: SP.lg, bottom: 104, flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface2, borderRadius: R.md, padding: SP.md, borderWidth: 1, borderColor: C.line, elevation: 14 },
   toastDot: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: SP.md },
 });
 
 /* Exposed only for the automated render tests in tests/ (not used by the app). */
-export const __screens = { HomeScreen, ListScreen, PersonForm, DetailScreen, AdminScreen, Onboarding, Splash, emptyPerson, DEFAULT_SETTINGS, T };
+export const __screens = { HomeScreen, ListScreen, PersonForm, DetailScreen, AdminScreen, AttendanceScreen, QuickStatusSheet, Onboarding, Splash, emptyPerson, DEFAULT_SETTINGS, T };

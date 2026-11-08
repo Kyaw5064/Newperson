@@ -43,6 +43,13 @@ jobs:
       - name: Run tests
         run: node tests/run-tests.mjs
 
+      - name: Set app version code (always higher → installs as an update)
+        run: |
+          node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('app.json','utf8'));j.expo.android.versionCode=100+Number(process.env.RUN);fs.writeFileSync('app.json',JSON.stringify(j,null,2));console.log(j.expo.version, j.expo.android.versionCode)"
+          echo "APP_VER=$(node -p "require('./app.json').expo.version")" >> $GITHUB_ENV
+        env:
+          RUN: ${{ github.run_number }}
+
       - name: Generate native Android project
         run: npx expo prebuild --platform android --no-install
         env:
@@ -61,7 +68,7 @@ jobs:
       - name: Name the APK
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/release/app-release.apk "dist/Newperson-v1.0.${{ github.run_number }}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "dist/Newperson-v${APP_VER}-b${{ github.run_number }}.apk"
           ls -la dist
 
       - name: Upload APK (workflow artifact)
@@ -73,8 +80,8 @@ jobs:
       - name: Publish GitHub Release (download from phone)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: Newperson v1.0.${{ github.run_number }}
+          tag_name: v${{ env.APP_VER }}-b${{ github.run_number }}
+          name: Newperson v${{ env.APP_VER }} (build ${{ github.run_number }})
           files: dist/*.apk
           make_latest: true
           body: |

@@ -112,6 +112,28 @@ ok('backup merge newer wins', merged && merged.people.find((p) => p.id === 'a1')
 ok('backup rejects garbage', App.mergeBackup(existing, [{ foo: 1 }]) === null && App.mergeBackup(existing, 'x') === null);
 ok('pin hash stable & distinct', App.hashPin('1234') === App.hashPin('1234') && App.hashPin('1234') !== App.hashPin('1235'));
 
+/* ── attendance ── */
+eq('dayKey pads', App.dayKey(new Date(2026, 0, 5)), '2026-01-05');
+eq('keyToDate roundtrip', App.dayKey(App.keyToDate('2026-11-08')), '2026-11-08');
+let A = {};
+A = App.setMark(A, '2026-11-08', 'p1', 'work');
+A = App.setMark(A, '2026-11-08', 'p2', 'absent', '  sick kid ');
+A = App.setMark(A, '2026-11-07', 'p1', 'off');
+eq('setMark stores code', A['2026-11-08'].p1.c, 'work');
+eq('setMark trims note', A['2026-11-08'].p2.n, 'sick kid');
+eq('day counts', App.attDayCounts(A, '2026-11-08', ['p1', 'p2', 'p3']), { counts: { work: 1, absent: 1 }, none: 1 });
+eq('month counts', App.attMonthCounts(A, 'p1', 2026, 10), { work: 1, off: 1 });
+let B = App.setMark(A, '2026-11-07', 'p1', null);
+ok('clearing last mark removes the day', !B['2026-11-07'] && A['2026-11-07'], B);
+ok('setMark is immutable', A['2026-11-07'].p1.c === 'off');
+const AS = { ...App.__screens.DEFAULT_SETTINGS, attOff: ['late'], attCustom: [{ id: 'c_x', label: 'OT', color: '#fff' }] };
+eq('types respect off + custom', App.attTypes(AS).map((x) => x.id), ['work', 'off', 'absent', 'leave', 'sick', 'c_x']);
+eq('types include off when asked', App.attTypes(AS, true).length, 7);
+eq('custom label', App.attLabel(App.attFind(AS, 'c_x'), (k) => k), 'OT');
+eq('merge att', App.mergeAtt({ '2026-11-01': { a: { c: 'work' } } }, { '2026-11-01': { b: { c: 'off' } }, junk: 1, '2026-11-02': { a: { c: 'sick' } } }),
+  { '2026-11-01': { a: { c: 'work' }, b: { c: 'off' } }, '2026-11-02': { a: { c: 'sick' } } });
+eq('merge att ignores garbage', App.mergeAtt({ x: 1 }, 'nope'), { x: 1 });
+
 /* ── render every screen in every language ── */
 const { HomeScreen, ListScreen, PersonForm, DetailScreen, AdminScreen, Onboarding, Splash } = App.__screens;
 const people = [
@@ -119,6 +141,8 @@ const people = [
   base({ id: 'p2', nameMm: 'အေးအေး', phone: '0891112222', phoneVerified: true, status: 'lead', emName: 'Mom', emPhone: '09123456789', notes: 'hi', history: [], createdAt: '2026-11-02T02:00:00Z', updatedAt: '2026-11-02T02:00:00Z' }),
 ];
 const noop = () => {};
+const today = App.dayKey(new Date());
+let att = App.setMark({}, today, 'p1', 'leave', 'wedding');
 const gr = { current: null };
 for (const lang of ['my', 'th', 'en']) {
   const t = (k, p) => { let s = (App.__screens.T[lang][k] ?? App.__screens.T.en[k] ?? k); if (p) for (const x in p) s = s.split('{' + x + '}').join(p[x]); return s; };
@@ -128,6 +152,11 @@ for (const lang of ['my', 'th', 'en']) {
     onboarding: [Onboarding, { settings, onDone: noop }],
     homeEmpty: [HomeScreen, { people: [], settings, t, go: noop, reduce: true }],
     home: [HomeScreen, { people, settings, t, go: noop, reduce: true }],
+    homeAtt: [HomeScreen, { people, settings, t, go: noop, reduce: true, att }],
+    attendEmpty: [App.__screens.AttendanceScreen, { people: [], att: {}, settings, t, onMark: noop, onBulk: noop, notify: noop }],
+    attend: [App.__screens.AttendanceScreen, { people, att, settings: { ...settings, attCustom: [{ id: 'c_1', label: 'OT', color: '#fff' }] }, t, onMark: noop, onBulk: noop, notify: noop }],
+    quickSheet: [App.__screens.QuickStatusSheet, { person: people[0], t, onPick: noop, onClose: noop }],
+    detailAtt: [DetailScreen, { person: people[0], settings, t, back: noop, onEdit: noop, onDelete: noop, onPatch: noop, notify: noop, att, onMark: noop }],
     listEmpty: [ListScreen, { people: [], settings, t, go: noop, params: {} }],
     list: [ListScreen, { people, settings, t, go: noop, params: { alert: 'phone' } }],
     formNew: [PersonForm, { initial: null, people, settings, t, onSave: async () => true, onCancel: noop, guardRef: gr, notify: noop }],
@@ -136,15 +165,25 @@ for (const lang of ['my', 'th', 'en']) {
     detail2: [DetailScreen, { person: people[1], settings, t, back: noop, onEdit: noop, onDelete: noop, onPatch: noop, notify: noop }],
     detailMissing: [DetailScreen, { person: undefined, settings, t, back: noop, onEdit: noop, onDelete: noop, onPatch: noop, notify: noop }],
     adminLocked: [AdminScreen, { settings, setSettings: noop, people, setPeopleAll: noop, log: [], addLog: noop, t, notify: noop, unlocked: false, setUnlocked: noop, lang, setLang: noop }],
-    adminOpen: [AdminScreen, { settings, setSettings: noop, people, setPeopleAll: noop, log: [{ text: 'x', at: '2026-11-01T00:00:00Z' }], addLog: noop, t, notify: noop, unlocked: true, setUnlocked: noop, lang, setLang: noop }],
+    adminOpen: [AdminScreen, { settings, setSettings: noop, people, setPeopleAll: noop, log: [{ text: 'x', at: '2026-11-01T00:00:00Z' }], addLog: noop, t, notify: noop, unlocked: true, setUnlocked: noop, lang, setLang: noop, att, setAttAll: noop }],
   };
   for (const [name, [Comp, props]] of Object.entries(cases)) {
     try {
       const html = renderToStaticMarkup(React.createElement(Comp, props));
       ok(`render ${lang}/${name}`, html.length > 50, html.length);
-      ok(`no missing translation ${lang}/${name}`, !/>(st_|dt_)[a-z]+</.test(html));
+      ok(`no missing translation ${lang}/${name}`, !/>(st_|dt_|att_|att[A-Z])[A-Za-z]*</.test(html), (html.match(/>(st_|dt_|att_|att[A-Z])[A-Za-z]*</) || [])[0]);
     } catch (err) { ok(`render ${lang}/${name}`, false, String(err && err.stack || err).slice(0, 400)); }
   }
+}
+// attendance report + CSV in every language
+for (const lang of ['my', 'th', 'en']) {
+  const t = (k, p) => { let s = (App.__screens.T[lang][k] ?? k); if (p) for (const x in p) s = s.split('{' + x + '}').join(p[x]); return s; };
+  const settings = { ...App.__screens.DEFAULT_SETTINGS, factoryName: 'ABC' };
+  const rep = App.attReportText(att, today, people, settings, t);
+  ok(`report ${lang} lists leave with note`, rep.includes(t('att_leave') + ' (1)') && rep.includes('wedding'), rep);
+  const d = new Date();
+  const csv = App.attMonthCsv(att, people, d.getFullYear(), d.getMonth(), settings, t);
+  ok(`att csv ${lang} has started person + leave`, csv.charCodeAt(0) === 0xFEFF && csv.includes('MAUNG') === false && csv.includes('မောင်မောင်') && csv.includes('wedding'), csv.slice(0, 300));
 }
 // App root renders (splash state first)
 try { ok('render App root', renderToStaticMarkup(React.createElement(App.default)).includes('NEW·PERSON')); } catch (err) { ok('render App root', false, String(err)); }
